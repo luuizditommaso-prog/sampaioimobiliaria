@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import RevealOnScroll from "./components/RevealOnScroll";
 import {
   Home,
   Building2,
@@ -30,6 +31,8 @@ import marcoImg from "./assets/consultores/Marco.jpg";
 import renataImg from "./assets/consultores/Renata.jpg";
 import tatianaImg from "./assets/consultores/Tatiana.jpg";
 import beatrizImg from "./assets/consultores/Beatriz.jpg";
+
+
 
 const DISTRICTS = ["Aveiro", "Porto", "Setúbal"];
 const COUNTIES = [
@@ -202,6 +205,48 @@ function useLocalStorage(key, initialValue) {
   }, [key, value]);
 
   return [value, setValue];
+
+  function RevealOnScroll({ children, className = "" }) {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(element);
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={classNames("reveal", isVisible && "reveal-visible", className)}
+    >
+      {children}
+    </div>
+  );
+
+  return (
+    <div
+      ref={ref}
+      className={classNames("reveal", isVisible && "reveal-visible", className)}
+    >
+      {children}
+    </div>
+  );
+}
 }
 
 function App() {
@@ -286,14 +331,28 @@ function App() {
     navigate("property-detail");
   };
 
+  useEffect(() => { fetch("http://localhost:4000/api/test") .then(res => res.json()) .then(data => console.log(data)) .catch(err => console.error(err)); }, []);
+
   return (
     <div className="min-h-screen bg-white text-slate-800">
-      <style>{`
-        html { scroll-behavior: smooth; }
-        body { font-family: Inter, system-ui, sans-serif; }
-        .gold-gradient { background: linear-gradient(135deg, #b58b2a 0%, #e7c96c 100%); }
-        .green-gradient { background: linear-gradient(135deg, #0d3b2e 0%, #1b5e4b 100%); }
-      `}</style>
+<style>{`
+  html { scroll-behavior: smooth; }
+  body { font-family: Inter, system-ui, sans-serif; }
+  .gold-gradient { background: linear-gradient(135deg, #b58b2a 0%, #e7c96c 100%); }
+  .green-gradient { background: linear-gradient(135deg, #0d3b2e 0%, #1b5e4b 100%); }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+    will-change: opacity, transform;
+  }
+
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`}</style>
 
       <Header
         currentPath={location.pathname}
@@ -485,50 +544,56 @@ function HomePage({ heroIndex, navigate, filters, setFilters, featured, openProp
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20 md:px-6">
-        <SectionHeading title="Comprar ou Arrendar?" subtitle="Descubra a melhor opção para o seu momento de vida" />
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          <ActionCard title="Imóveis para venda" image={defaultImages[0]} onClick={() => navigate("properties")} />
-          <ActionCard
-            title="Imóveis para arrendamento"
-            image={defaultImages[1]}
-            onClick={() => {
-              setFilters({ ...filters, businessType: "Arrendamento" });
-              navigate("properties");
-            }}
-          />
-        </div>
-      </section>
+      <RevealOnScroll>
+  <section className="mx-auto max-w-7xl px-4 py-20 md:px-6">
+    <SectionHeading title="Comprar ou Arrendar?" subtitle="Descubra a melhor opção para o seu momento de vida" />
+    <div className="mt-10 grid gap-6 md:grid-cols-2">
+      <ActionCard title="Imóveis para venda" image={defaultImages[0]} onClick={() => navigate("properties")} />
+      <ActionCard
+        title="Imóveis para arrendamento"
+        image={defaultImages[1]}
+        onClick={() => {
+          setFilters({ ...filters, businessType: "Arrendamento" });
+          navigate("properties");
+        }}
+      />
+    </div>
+  </section>
+</RevealOnScroll>
 
-      <section className="green-gradient py-20 text-white">
-        <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <SectionHeading title="Destaques da semana" subtitle="Imóveis novos selecionados para gerar impacto e conversão" light />
-          <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {featured.map((property) => (
-              <PropertyCard key={property.id} property={property} onClick={() => openProperty(property.id)} dark />
-            ))}
+     <RevealOnScroll>
+  <section className="green-gradient py-20 text-white">
+    <div className="mx-auto max-w-7xl px-4 md:px-6">
+      <SectionHeading title="Destaques da semana" subtitle="Imóveis novos selecionados para gerar impacto e conversão" light />
+      <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {featured.map((property) => (
+          <PropertyCard key={property.id} property={property} onClick={() => openProperty(property.id)} dark />
+        ))}
+      </div>
+    </div>
+  </section>
+</RevealOnScroll>
+
+      <RevealOnScroll>
+  <section className="mx-auto max-w-7xl px-4 py-20 md:px-6">
+    <SectionHeading title="Serviço" subtitle="Uma estrutura completa para apoiar todas as etapas do processo imobiliário" />
+    <div className="mt-10 grid gap-6 md:grid-cols-3">
+      {[
+        ["Certificação energética", "service-energy", "Classificação energética e enquadramento legal."],
+        ["Avaliação de imóveis", "service-evaluation", "Critérios, documentos e fatores de valorização."],
+        ["Recrutamento", "service-recruitment", "Junte-se a uma equipa em crescimento."],
+      ].map(([title, target, text]) => (
+        <button key={title} onClick={() => navigate(target)} className="cursor-pointer rounded-[28px] border border-slate-200 bg-white p-7 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-[#0f2f25]">
+            <Briefcase size={22} />
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-20 md:px-6">
-        <SectionHeading title="Serviço" subtitle="Uma estrutura completa para apoiar todas as etapas do processo imobiliário" />
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {[
-            ["Certificação energética", "service-energy", "Classificação energética e enquadramento legal."],
-            ["Avaliação de imóveis", "service-evaluation", "Critérios, documentos e fatores de valorização."],
-            ["Recrutamento", "service-recruitment", "Junte-se a uma equipa em crescimento."],
-          ].map(([title, target, text]) => (
-            <button key={title} onClick={() => navigate(target)} className="cursor-pointer rounded-[28px] border border-slate-200 bg-white p-7 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-[#0f2f25]">
-                <Briefcase size={22} />
-              </div>
-              <h3 className="text-xl font-bold text-[#0f2f25]">{title}</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{text}</p>
-            </button>
-          ))}
-        </div>
-      </section>
+          <h3 className="text-xl font-bold text-[#0f2f25]">{title}</h3>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{text}</p>
+        </button>
+      ))}
+    </div>
+  </section>
+</RevealOnScroll>
     </main>
   );
 }
@@ -812,32 +877,36 @@ function AboutPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-14 md:px-6">
       <HeroMini title="QUEM SOMOS" subtitle="Sampaio Mediação Imobiliária atua no mercado imobiliário, compra e venda de imóveis, arrendamento e trespasses." image={defaultImages[1]} />
-      <div className="mt-10 grid gap-8 xl:grid-cols-[1fr_0.9fr]">
-        <CardBlock title="Sobre Nós">
-          <ContentSection title="EMPRESA" text="A empresa conta com profissionais altamente qualificados e com ampla experiência na área, prontos para prestar um serviço de mediação personalizado, entendendo e interpretando as aspirações de cada cliente." />
-          <ContentSection title="MISSÃO" text="Sampaio Mediação Imobiliária é uma empresa que busca conciliar os reais interesses de seus clientes/parceiros, de forma que consigam realizar os seus sonhos e atinjam os seus objetivos." />
-          <section className="mb-10">
-            <h3 className="mb-4 text-lg font-bold uppercase tracking-wide text-[#0f2f25]">VISÃO</h3>
-            <p className="text-slate-700 leading-relaxed">Ser reconhecida como referência no sector imobiliário por sua eficiência e qualidade na busca do melhor para cada cliente, ser mais do que apenas um mediador, ser um parceiro necessário para aconselhamento e melhores decisões.</p>
-            <p className="mt-4 text-slate-700 leading-relaxed">A nossa equipa de colaboradores é formada por profissionais experientes, com vasto conhecimento para sugerir as melhores alternativas. Além disso, dispomos de um sistema totalmente informatizado, o que permite uma maior agilidade na pesquisa e adequação do perfil do imóvel às solicitações do cliente.</p>
-          </section>
-        </CardBlock>
+     <div className="mt-10 grid gap-8 xl:grid-cols-[1fr_0.9fr]">
+  <RevealOnScroll>
+    <CardBlock title="Sobre Nós">
+      <ContentSection title="EMPRESA" text="A empresa conta com profissionais altamente qualificados e com ampla experiência na área, prontos para prestar um serviço de mediação personalizado, entendendo e interpretando as aspirações de cada cliente." />
+      <ContentSection title="MISSÃO" text="Sampaio Mediação Imobiliária é uma empresa que busca conciliar os reais interesses de seus clientes/parceiros, de forma que consigam realizar os seus sonhos e atinjam os seus objetivos." />
+      <section className="mb-10">
+        <h3 className="mb-4 text-lg font-bold uppercase tracking-wide text-[#0f2f25]">VISÃO</h3>
+        <p className="text-slate-700 leading-relaxed">Ser reconhecida como referência no sector imobiliário por sua eficiência e qualidade na busca do melhor para cada cliente, ser mais do que apenas um mediador, ser um parceiro necessário para aconselhamento e melhores decisões.</p>
+        <p className="mt-4 text-slate-700 leading-relaxed">A nossa equipa de colaboradores é formada por profissionais experientes, com vasto conhecimento para sugerir as melhores alternativas. Além disso, dispomos de um sistema totalmente informatizado, o que permite uma maior agilidade na pesquisa e adequação do perfil do imóvel às solicitações do cliente.</p>
+      </section>
+    </CardBlock>
+  </RevealOnScroll>
 
-        <CardBlock title="NOSSOS CONSULTORES">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {consultants.map((consultant) => (
-              <div key={consultant.name} className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-center">
-                <img src={consultant.image} alt={consultant.name} className="mx-auto h-24 w-24 rounded-full object-cover" />
-                <div className="mt-4 text-lg font-bold text-[#0f2f25]">{consultant.name}</div>
-                <div className="mt-1 text-sm text-slate-600">{consultant.phone || "Número a definir"}</div>
-                <a href={consultant.phone ? `https://wa.me/${consultant.phone.replace(/\D/g, "")}` : "#"} className="mt-4 inline-block rounded-full bg-[#0f2f25] px-4 py-2 text-sm font-semibold text-white">
-                  WhatsApp
-                </a>
-              </div>
-            ))}
+  <RevealOnScroll>
+    <CardBlock title="NOSSOS CONSULTORES">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {consultants.map((consultant) => (
+          <div key={consultant.name} className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-center">
+            <img src={consultant.image} alt={consultant.name} className="mx-auto h-24 w-24 rounded-full object-cover" />
+            <div className="mt-4 text-lg font-bold text-[#0f2f25]">{consultant.name}</div>
+            <div className="mt-1 text-sm text-slate-600">{consultant.phone || "Número a definir"}</div>
+            <a href={consultant.phone ? `https://wa.me/${consultant.phone.replace(/\D/g, "")}` : "#"} className="mt-4 inline-block rounded-full bg-[#0f2f25] px-4 py-2 text-sm font-semibold text-white">
+              WhatsApp
+            </a>
           </div>
-        </CardBlock>
+        ))}
       </div>
+    </CardBlock>
+  </RevealOnScroll>
+</div>
     </main>
   );
 }
@@ -851,44 +920,49 @@ function PrivacyPage() {
 }
 
 function AdminPage({ loggedIn, setLoggedIn, properties, setProperties, openProperty }) {
-  const emptyForm = {
-    id: "",
-    reference: "",
-    title: "",
-    description: "",
-    district: "",
-    county: "",
-    parish: "",
-    zone: "",
-    state: "",
-    nature: "",
-    typology: "",
-    businessType: "",
-    price: "",
-    bedrooms: "",
-    innerBedrooms: "",
-    bathrooms: "",
-    floor: "",
-    usefulArea: "",
-    grossArea: "",
-    energyClass: "",
-    imagesText: "",
-    videoUrl: "",
-    location: "",
-    hasVarandas: false,
-    hasCozinha: false,
-    surroundBanco: false,
-    surroundEscola: false,
-    surroundFarmacia: false,
-    surroundGinasio: false,
-    surroundMetro: false,
-    surroundTransportes: false,
-    surroundCentroCidade: false,
-    surroundEspacosVerdes: false,
-    equipElevador: false,
-    serviceCozinhaEquipada: false,
-    infraGaragem: false,
-  };
+ const emptyForm = {
+  id: "",
+  reference: "",
+  title: "",
+  description: "",
+  district: "",
+  county: "",
+  parish: "",
+  zone: "",
+  state: "",
+  nature: "",
+  typology: "",
+  businessType: "",
+  price: "",
+  bedrooms: "",
+  innerBedrooms: "",
+  bathrooms: "",
+  floor: "",
+  usefulArea: "",
+  grossArea: "",
+  energyClass: "",
+  imagesText: "",
+  videoUrl: "",
+  location: "",
+
+  hasVarandas: false,
+  hasCozinha: false,
+
+  surroundBanco: false,
+  surroundEscola: false,
+  surroundFarmacia: false,
+  surroundGinasio: false,
+  surroundMetro: false,
+  surroundTransportes: false,
+  surroundCentroCidade: false,
+  surroundEspacosVerdes: false,
+
+  equipElevador: false,
+
+  serviceCozinhaEquipada: false,
+
+  infraGaragem: false,
+};
 
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
@@ -909,44 +983,60 @@ function AdminPage({ loggedIn, setLoggedIn, properties, setProperties, openPrope
   const handleSubmit = (e) => {
     e.preventDefault();
     const payload = {
-      id: editingId || crypto.randomUUID(),
-      reference: form.reference,
-      title: form.title,
-      description: form.description,
-      district: form.district,
-      county: form.county,
-      parish: form.parish,
-      zone: form.zone,
-      state: form.state,
-      nature: form.nature,
-      typology: form.typology,
-      businessType: form.businessType,
-      price: Number(form.price || 0),
-      bedrooms: Number(form.bedrooms || 0),
-      innerBedrooms: Number(form.innerBedrooms || 0),
-      bathrooms: Number(form.bathrooms || 0),
-      floor: Number(form.floor || 0),
-      usefulArea: Number(form.usefulArea || 0),
-      grossArea: Number(form.grossArea || 0),
-      energyClass: form.energyClass,
-      images: form.imagesText.split("\n").map((x) => x.trim()).filter(Boolean).length ? form.imagesText.split("\n").map((x) => x.trim()).filter(Boolean) : defaultImages,
-      videoUrl: form.videoUrl,
-      location: form.location,
-      divisions: { varandas: form.hasVarandas, cozinha: form.hasCozinha },
-      surroundings: {
-        banco: form.surroundBanco,
-        escola: form.surroundEscola,
-        farmacia: form.surroundFarmacia,
-        ginasio: form.surroundGinasio,
-        metro: form.surroundMetro,
-        transportes: form.surroundTransportes,
-        centroCidade: form.surroundCentroCidade,
-        espacosVerdes: form.surroundEspacosVerdes,
-      },
-      equipments: { elevador: form.equipElevador },
-      services: { cozinhaEquipada: form.serviceCozinhaEquipada },
-      infrastructure: { garagem: form.infraGaragem },
-    };
+  id: editingId || crypto.randomUUID(),
+  reference: form.reference,
+  title: form.title,
+  description: form.description,
+  district: form.district,
+  county: form.county,
+  parish: form.parish,
+  zone: form.zone,
+  state: form.state,
+  nature: form.nature,
+  typology: form.typology,
+  businessType: form.businessType,
+  price: Number(form.price || 0),
+  bedrooms: Number(form.bedrooms || 0),
+  innerBedrooms: Number(form.innerBedrooms || 0),
+  bathrooms: Number(form.bathrooms || 0),
+  floor: Number(form.floor || 0),
+  usefulArea: Number(form.usefulArea || 0),
+  grossArea: Number(form.grossArea || 0),
+  energyClass: form.energyClass,
+  images: form.imagesText.split("\n").map((x) => x.trim()).filter(Boolean).length
+    ? form.imagesText.split("\n").map((x) => x.trim()).filter(Boolean)
+    : defaultImages,
+  videoUrl: form.videoUrl,
+  location: form.location,
+
+  divisions: {
+    varandas: form.hasVarandas,
+    cozinha: form.hasCozinha,
+  },
+
+  surroundings: {
+    banco: form.surroundBanco,
+    escola: form.surroundEscola,
+    farmacia: form.surroundFarmacia,
+    ginasio: form.surroundGinasio,
+    metro: form.surroundMetro,
+    transportes: form.surroundTransportes,
+    centroCidade: form.surroundCentroCidade,
+    espacosVerdes: form.surroundEspacosVerdes,
+  },
+
+  equipments: {
+    elevador: form.equipElevador,
+  },
+
+  services: {
+    cozinhaEquipada: form.serviceCozinhaEquipada,
+  },
+
+  infrastructure: {
+    garagem: form.infraGaragem,
+  },
+};
 
     setProperties((prev) => {
       const exists = prev.some((p) => p.id === payload.id);
@@ -1040,23 +1130,106 @@ function AdminPage({ loggedIn, setLoggedIn, properties, setProperties, openPrope
       {activeTab === "add" && (
         <form onSubmit={handleSubmit} className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <Input value={form.reference} onChange={(v) => setForm({ ...form, reference: v })} label="Referência" />
-            <Input value={form.title} onChange={(v) => setForm({ ...form, title: v })} label="Nome do imóvel" />
-            <Input value={form.typology} onChange={(v) => setForm({ ...form, typology: v })} label="Tipologia" />
-            <Select label="Distrito" value={form.district} onChange={(v) => setForm({ ...form, district: v })} options={DISTRICTS} />
-            <Select label="Concelho" value={form.county} onChange={(v) => setForm({ ...form, county: v })} options={COUNTIES} />
-            <Select label="Freguesia" value={form.parish} onChange={(v) => setForm({ ...form, parish: v })} options={PARISHES} />
-            <Select label="Zona" value={form.zone} onChange={(v) => setForm({ ...form, zone: v })} options={ZONES} />
-            <Select label="Estado" value={form.state} onChange={(v) => setForm({ ...form, state: v })} options={PROPERTY_STATES} />
-            <Select label="Natureza" value={form.nature} onChange={(v) => setForm({ ...form, nature: v })} options={NATURES} />
-            <Select label="Negócio" value={form.businessType} onChange={(v) => setForm({ ...form, businessType: v })} options={BUSINESS_TYPES} />
-            <Input type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} label="Valor" />
-            <Select label="Categoria energética" value={form.energyClass} onChange={(v) => setForm({ ...form, energyClass: v })} options={ENERGY_CLASSES} />
-          </div>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <button className="cursor-pointer inline-flex items-center gap-2 rounded-2xl bg-[#0f2f25] px-6 py-3 font-semibold text-white"><Plus size={18} /> {editingId ? "Atualizar imóvel" : "Adicionar o imóvel"}</button>
-            {editingId && <button type="button" onClick={resetForm} className="cursor-pointer rounded-2xl border border-slate-300 px-6 py-3 font-semibold text-slate-700">Cancelar edição</button>}
-          </div>
+  <Input value={form.reference} onChange={(v) => setForm({ ...form, reference: v })} label="Referência" />
+  <Input value={form.title} onChange={(v) => setForm({ ...form, title: v })} label="Nome do imóvel" />
+  <Input value={form.typology} onChange={(v) => setForm({ ...form, typology: v })} label="Tipologia" />
+
+  <Select label="Distrito" value={form.district} onChange={(v) => setForm({ ...form, district: v })} options={DISTRICTS} />
+  <Select label="Concelho" value={form.county} onChange={(v) => setForm({ ...form, county: v })} options={COUNTIES} />
+  <Select label="Freguesia" value={form.parish} onChange={(v) => setForm({ ...form, parish: v })} options={PARISHES} />
+
+  <Select label="Zona" value={form.zone} onChange={(v) => setForm({ ...form, zone: v })} options={ZONES} />
+  <Select label="Estado" value={form.state} onChange={(v) => setForm({ ...form, state: v })} options={PROPERTY_STATES} />
+  <Select label="Natureza" value={form.nature} onChange={(v) => setForm({ ...form, nature: v })} options={NATURES} />
+
+  <Select label="Negócio" value={form.businessType} onChange={(v) => setForm({ ...form, businessType: v })} options={BUSINESS_TYPES} />
+  <Input type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} label="Valor" />
+  <Select label="Categoria energética" value={form.energyClass} onChange={(v) => setForm({ ...form, energyClass: v })} options={ENERGY_CLASSES} />
+
+  <Input type="number" value={form.bathrooms} onChange={(v) => setForm({ ...form, bathrooms: v })} label="Casas de banho" />
+  <Input type="number" value={form.innerBedrooms} onChange={(v) => setForm({ ...form, innerBedrooms: v })} label="Quartos interiores" />
+  <Input type="number" value={form.bedrooms} onChange={(v) => setForm({ ...form, bedrooms: v })} label="Total de quartos" />
+
+  <Input type="number" value={form.floor} onChange={(v) => setForm({ ...form, floor: v })} label="Piso" />
+  <Input type="number" value={form.usefulArea} onChange={(v) => setForm({ ...form, usefulArea: v })} label="Área útil" />
+  <Input type="number" value={form.grossArea} onChange={(v) => setForm({ ...form, grossArea: v })} label="Área bruta" />
+
+  <div className="md:col-span-2 xl:col-span-3">
+    <label className="mb-2 block text-sm font-semibold text-slate-700">Descrição</label>
+    <textarea
+      value={form.description}
+      onChange={(e) => setForm({ ...form, description: e.target.value })}
+      rows={5}
+      className="w-full rounded-2xl border border-slate-300 px-4 py-3"
+    />
+  </div>
+
+  <div className="md:col-span-2 xl:col-span-3">
+    <label className="mb-2 block text-sm font-semibold text-slate-700">Fotos (uma URL por linha)</label>
+    <textarea
+      value={form.imagesText}
+      onChange={(e) => setForm({ ...form, imagesText: e.target.value })}
+      rows={4}
+      className="w-full rounded-2xl border border-slate-300 px-4 py-3"
+    />
+  </div>
+
+  <Input value={form.videoUrl} onChange={(v) => setForm({ ...form, videoUrl: v })} label="URL do vídeo" />
+  <Input value={form.location} onChange={(v) => setForm({ ...form, location: v })} label="Localização / morada" />
+</div>
+<div className="mt-8 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+  <CheckboxGroup
+    title="Divisões"
+    items={[
+      ["Varandas", "hasVarandas"],
+      ["Cozinha", "hasCozinha"],
+    ]}
+    form={form}
+    setForm={setForm}
+  />
+
+  <CheckboxGroup
+    title="Zona Envolvente"
+    items={[
+      ["Banco", "surroundBanco"],
+      ["Escola", "surroundEscola"],
+      ["Farmácia", "surroundFarmacia"],
+      ["Ginásio", "surroundGinasio"],
+      ["Metro", "surroundMetro"],
+      ["Transportes Públicos", "surroundTransportes"],
+      ["Centro da Cidade", "surroundCentroCidade"],
+      ["Espaços Verdes", "surroundEspacosVerdes"],
+    ]}
+    form={form}
+    setForm={setForm}
+  />
+
+  <CheckboxGroup
+    title="Equipamentos / Serviços / Infraestrutura"
+    items={[
+      ["Elevador", "equipElevador"],
+      ["Cozinha equipada", "serviceCozinhaEquipada"],
+      ["Garagem", "infraGaragem"],
+    ]}
+    form={form}
+    setForm={setForm}
+  />
+</div>
+<div className="mt-8 flex flex-wrap gap-3">
+  <button className="cursor-pointer inline-flex items-center gap-2 rounded-2xl bg-[#0f2f25] px-6 py-3 font-semibold text-white">
+    <Plus size={18} /> {editingId ? "Atualizar imóvel" : "Adicionar o imóvel"}
+  </button>
+
+  {editingId && (
+    <button
+      type="button"
+      onClick={resetForm}
+      className="cursor-pointer rounded-2xl border border-slate-300 px-6 py-3 font-semibold text-slate-700"
+    >
+      Cancelar edição
+    </button>
+  )}
+</div>
         </form>
       )}
 
@@ -1297,6 +1470,29 @@ function Select({ label, value, onChange, options }) {
         <option value="">Selecione</option>
         {options.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
+    </div>
+  );
+}
+
+function CheckboxGroup({ title, items, form, setForm }) {
+  return (
+    <div className="rounded-[24px] border border-slate-200 p-5">
+      <h3 className="mb-4 text-lg font-bold text-[#0f2f25]">{title}</h3>
+      <div className="space-y-3">
+        {items.map(([label, key]) => (
+          <label
+            key={key}
+            className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700"
+          >
+            <span>{label}</span>
+            <input
+              type="checkbox"
+              checked={!!form[key]}
+              onChange={(e) => setForm({ ...form, [key]: e.target.checked })}
+            />
+          </label>
+        ))}
+      </div>
     </div>
   );
 }
