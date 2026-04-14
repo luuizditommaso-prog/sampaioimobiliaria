@@ -331,7 +331,32 @@ function App() {
     navigate("property-detail");
   };
 
-  useEffect(() => { fetch("http://localhost:4000/api/test") .then(res => res.json()) .then(data => console.log(data)) .catch(err => console.error(err)); }, []);
+ const handleSubmit = (e) => {
+  e.preventDefault();
+
+  fetch("http://localhost:4000/api/contacts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name,
+      email,
+      phone,
+      subject,
+      message,
+    }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Enviado:", data);
+      alert("Mensagem enviada!");
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("Erro ao enviar");
+    });
+};
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
@@ -428,7 +453,7 @@ function App() {
       <Footer navigate={navigate} />
     </div>
   );
-}
+};
 
 function Header({ currentPath, navigate, mobileMenuOpen, setMobileMenuOpen, language, setLanguage }) {
   const items = [
